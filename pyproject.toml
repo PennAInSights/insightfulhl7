@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=42", "wheel", "hl7apy", "pydicom"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "insightfulhl7"
+version = "0.1.0"
+description = "Apps and classes for receiving, composing, and sending HL7 messages"
+authors = [
+    {name = "Jeffrey Duda", email = "jeff.duda@gmail.com"}
+]
+license = {text = "CC BY-NC-SA 4.0"}
+readme = "README.md"
+requires-python = ">=3.10"
+
+[project.urls]
+"Homepage" = "https://github.com/pennainsights/insightfulhl7"
