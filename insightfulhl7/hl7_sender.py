@@ -81,18 +81,18 @@ def send_hl7_message(message, host, port):
 def main():
 
     parser = argparse.ArgumentParser(description='Send HL7 message')
-    parser.add_argument('-i', '--ip', help='destination IP address', type=str, required=True)
+    parser.add_argument('-a', '--addr', help='destination IP address', type=str, required=True)
     parser.add_argument('-p', '--port', help='Port number for server', type=int, required=True)
-    parser.add_argument('-m', '--message', help='File with message to send', type=str, required=True)
+    parser.add_argument('-i', '--input_message', help='File with message to send', type=str, required=True)
     args = parser.parse_args()
 
-    with open(args.message, 'r') as file:
+    with open(args.input_message, 'r') as file:
         dat = file.readlines()
     dat = ''.join(dat).replace('\n', '\r')
     msg = parse_message(dat)
 
-    print("Sending to "+args.ip+ ":" + str(args.port))
-    send_hl7_message(msg, args.ip, args.port)
+    print("Sending to "+args.addr+ ":" + str(args.port))
+    send_hl7_message(msg, args.addr, args.port)
 
 if __name__=="__main__":
     sys.exit(main())
