@@ -13,7 +13,7 @@ indent_seg = "    "
 indent_fld = "        "
 
 
-def subgroup (group, indent):
+def subgroup(group, indent):
     indent = indent + "    "
     print (indent , group)
     for group_segment in group.children:
@@ -25,24 +25,36 @@ def subgroup (group, indent):
                 print(indent_fld, indent ,attribute, attribute.value)
 
 
+def show_hl7_file(file_path: str) -> None:
 
-
-def show_message(file_path: str) -> None:
-    """
-
-    """
     if not os.path.exists(file_path):
         raise ValueError('File does not exist: '+file_path)
 
     with open(file_path, 'r') as file:
         dat = file.readlines()
     dat = ''.join(dat).replace('\n', '\r')
-    msg = parser.parse_message(dat)
+    show_hl7_string(dat)
 
-    print(msg.children[1])
+def show_hl7_string(dat: str) -> None:
+    msg = parser.parse_message(dat)
+    show_hl7_message(msg)
+
+
+def show_hl7_message(msg) -> None:
+    """
+
+    """
+    #if not os.path.exists(file_path):
+    #    raise ValueError('File does not exist: '+file_path)
+
+    #with open(file_path, 'r') as file:
+    #    dat = file.readlines()
+    #dat = ''.join(dat).replace('\n', '\r')
+    #msg = parser.parse_message(dat)
+    indent = "    "
     for segment in msg.children:
         if isinstance(segment, Segment):
-            print (indent ,segment)
+            print(indent,segment)
             for attribute in segment.children:
                 print(indent_fld, indent, attribute, attribute.value)
         if isinstance(segment, Group):
@@ -57,6 +69,48 @@ def show_message(file_path: str) -> None:
                             print(indent_fld, indent, attribute, attribute.value)
 
 
+def segment_to_dict(segment: Segment) -> dict:
+    dat = {'type':'Segment', 'name':segment.name, 'children':[]}
+    for att in segment.children:
+        field = {'type' : 'Field', 'name' : att.name, 'long_name':att.long_name, 'datatype' : att.datatype, 'value': att.value}
+        dat['children'].append(field)
+    return(dat)
+
+def group_to_dict(group: Group) -> dict:
+
+    dat = {'type':'Group', 'name':group.name, 'children':[]}
+    for group_segment in group.children:
+        gr = None
+        if isinstance(group_segment, Group):
+            gr = group_to_dict(group_segment)
+        else: 
+            gr = segment_to_dict(group_segment)
+        if gr is not None:
+            dat['children'].append(gr)
+
+    return(dat)
+    
+
+def message_to_dict(msg) -> dict:
+
+    dat = {
+        'type': 'Message', 
+        'message_type' : msg.msh.msh_9.value, 
+        'standard' : 'HL7', 
+        'version' : msg.msh.msh_12.value,
+        'children' : [] 
+        }
+
+    for segment in msg.children:
+        if isinstance(segment, Segment):
+            seg_dict = segment_to_dict(segment)
+            dat['children'].append(seg_dict)
+
+        if isinstance(segment, Group):
+            grp = group_to_dict(segment)
+            dat['children'].append(grp)
+
+    return(dat)
 
 def from_text_file(file_path: str, find_groups=True) -> hl7apy.core.Message:
     """
@@ -155,8 +209,6 @@ def get_observations(hl7_msg: hl7apy.core.Message) -> list:
         iob = [i for i in ob.children if i.name == 'OBX']  
         icat = [i.value.split('^')[0].split('&')[1] for i in iob[0].children if i.name == 'OBX_3']
         iobs = [i.value for i in iob[0].children if i.name == 'OBX_5']
-        print(icat)
-        print(iobs)
         cat += icat
         obs += iobs
 
